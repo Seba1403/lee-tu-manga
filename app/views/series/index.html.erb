@@ -1,0 +1,44 @@
+<% content_for :title, "Lee tu manga" %>
+
+<% if @continue_reading.any? %>
+  <section class="mb-10">
+    <h2 class="text-lg font-semibold mb-3">Continuar leyendo</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <% @continue_reading.each do |volume| %>
+        <%= link_to volume_path(volume, page: volume.reading_progress.current_page), class: "group" do %>
+          <div class="aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
+            <% if volume.cover.attached? %>
+              <%= image_tag volume.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
+            <% end %>
+          </div>
+          <p class="mt-1 text-sm font-medium truncate"><%= volume.series.title %></p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 truncate"><%= volume.display_name %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<section>
+  <h2 class="text-lg font-semibold mb-3">Series</h2>
+  <% if @series.none? %>
+    <p class="text-gray-500 dark:text-gray-400">
+      Todavía no hay ninguna serie indexada. Presiona "Actualizar biblioteca" arriba para escanear
+      <code class="text-xs"><%= LibraryScanner.root_path %></code>.
+    </p>
+  <% else %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <% @series.each do |series| %>
+        <%= link_to series_path(series), class: "group" do %>
+          <div class="aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
+            <% if series.cover&.attached? %>
+              <%= image_tag series.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: series.title %>
+            <% end %>
+          </div>
+          <p class="mt-1 text-sm font-medium truncate"><%= series.title %></p>
+          <p class="text-xs text-gray-500 dark:text-gray-400"><%= pluralize(series.volumes.size, "tomo") %></p>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</section>

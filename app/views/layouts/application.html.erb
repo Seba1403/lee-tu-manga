@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Lee Tu Manga" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Lee Tu Manga">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <header class="border-b border-gray-200 dark:border-gray-800">
+      <div class="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <%= link_to "Lee tu manga", root_path, class: "font-semibold text-lg" %>
+
+        <div class="flex items-center gap-2">
+          <% if owner_signed_in? %>
+            <%= button_to "Actualizar biblioteca", library_scan_path, method: :post,
+                  class: "text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+            <%= button_to "Cerrar sesión", session_path, method: :delete,
+                  class: "text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+          <% else %>
+            <%= link_to "Iniciar sesión", new_session_path,
+                  class: "text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <% if notice %>
+      <div class="container mx-auto px-4 mt-4">
+        <p class="text-sm bg-green-50 text-green-800 border border-green-200 rounded px-3 py-2 dark:bg-green-950 dark:text-green-200 dark:border-green-900">
+          <%= notice %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="container mx-auto px-4 mt-4">
+        <p class="text-sm bg-red-50 text-red-800 border border-red-200 rounded px-3 py-2 dark:bg-red-950 dark:text-red-200 dark:border-red-900">
+          <%= alert %>
+        </p>
+      </div>
+    <% end %>
+
+    <main class="container mx-auto px-4 py-6">
+      <%= yield %>
+    </main>
+  </body>
+</html>

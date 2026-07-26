@@ -1,0 +1,16 @@
+services:
+  web:
+    # Reemplazar <tu-usuario-github> por el usuario/organización real de GitHub.
+    image: ghcr.io/<tu-usuario-github>/lee-tu-manga:latest
+    restart: unless-stopped
+    ports:
+      # Cloudflare Tunnel debe apuntar a http://localhost:${APP_PORT}
+      - "127.0.0.1:${APP_PORT:-3050}:80"
+    environment:
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      MANGA_LIBRARY_PATH: /library
+      OWNER_USERNAME: ${OWNER_USERNAME}
+      OWNER_PASSWORD: ${OWNER_PASSWORD}
+    volumes:
+      - ./mangas:/library:ro
+      - ./storage:/rails/storage

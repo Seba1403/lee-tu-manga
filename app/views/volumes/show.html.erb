@@ -1,0 +1,18 @@
+<% content_for :title, "#{@volume.series.title} — #{@volume.display_name}" %>
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 text-sm">
+  <%= link_to "← #{@volume.series.title}", series_path(@volume.series), class: "text-gray-500 dark:text-gray-400 hover:underline" %>
+
+  <div class="flex items-center gap-3">
+    <span class="text-gray-500 dark:text-gray-400"><%= @volume.display_name %> — página <%= @page_number + 1 %> / <%= @volume.page_count %></span>
+
+    <div class="flex text-xs rounded border border-gray-300 dark:border-gray-700 overflow-hidden shrink-0">
+      <%= link_to "Página", volume_path(@volume, page: @page_number, mode: "paged"),
+            class: "px-2 py-1 #{@mode == 'paged' ? 'bg-gray-200 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}" %>
+      <%= link_to "Cascada", volume_path(@volume, page: @page_number, mode: "scroll"),
+            class: "px-2 py-1 border-l border-gray-300 dark:border-gray-700 #{@mode == 'scroll' ? 'bg-gray-200 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}" %>
+    </div>
+  </div>
+</div>
+
+<%= render(@mode == "scroll" ? "scroll" : "paged") %>

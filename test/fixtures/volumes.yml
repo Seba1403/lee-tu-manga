@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  series: one
+  position: 9.99
+  display_name: MyString
+  file_path: MyString
+  file_size: 1
+  file_mtime: 2026-07-26 15:32:59
+  page_count: 1
+  cover_page_index: 1
+
+two:
+  series: two
+  position: 9.99
+  display_name: MyString
+  file_path: MyString
+  file_size: 1
+  file_mtime: 2026-07-26 15:32:59
+  page_count: 1
+  cover_page_index: 1

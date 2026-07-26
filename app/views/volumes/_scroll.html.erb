@@ -1,0 +1,20 @@
+<div data-controller="reader-scroll"
+     data-reader-scroll-initial-page-value="<%= @page_number %>"
+     data-reader-scroll-progress-url-value="<%= progress_volume_path(@volume) %>"
+     class="flex flex-col items-center gap-1 mx-auto max-w-3xl">
+  <% (0...@volume.page_count).each do |n| %>
+    <%= image_tag page_volume_path(@volume, number: n),
+          class: "w-full h-auto aspect-[2/3] object-contain bg-gray-100 dark:bg-gray-900",
+          loading: (n - @page_number).abs <= 1 ? "eager" : "lazy",
+          data: { reader_scroll_target: "page", page_number: n } %>
+  <% end %>
+
+  <div class="py-6">
+    <% if @volume.next_volume %>
+      <%= link_to "Siguiente tomo →", volume_path(@volume.next_volume, page: 0, mode: "scroll"),
+            class: "px-4 py-2 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+    <% else %>
+      <span class="text-gray-500 dark:text-gray-400 text-sm">Fin del tomo</span>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<%
+  previous_page_url = if @page_number > 0
+    volume_path(@volume, page: @page_number - 1, mode: "paged")
+  elsif @volume.previous_volume
+    volume_path(@volume.previous_volume, page: @volume.previous_volume.page_count - 1, mode: "paged")
+  end
+
+  next_page_url = if @page_number < @volume.page_count - 1
+    volume_path(@volume, page: @page_number + 1, mode: "paged")
+  elsif @volume.next_volume
+    volume_path(@volume.next_volume, page: 0, mode: "paged")
+  end
+%>
+
+<div data-controller="reader"
+     data-reader-previous-url-value="<%= previous_page_url %>"
+     data-reader-next-url-value="<%= next_page_url %>"
+     class="flex flex-col items-center gap-4">
+
+  <div class="relative flex justify-center w-full">
+    <% if previous_page_url %>
+      <%= link_to previous_page_url, class: "absolute inset-y-0 left-0 w-1/3", "aria-label": "Página anterior" do %><% end %>
+    <% end %>
+
+    <%= image_tag page_volume_path(@volume, number: @page_number),
+          class: "max-h-[85vh] max-w-full w-auto rounded shadow-lg select-none",
+          alt: "Página #{@page_number + 1}" %>
+
+    <% if next_page_url %>
+      <%= link_to next_page_url, class: "absolute inset-y-0 right-0 w-1/3", "aria-label": "Página siguiente" do %><% end %>
+    <% end %>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <% if previous_page_url %>
+      <%= link_to "← Anterior", previous_page_url, class: "px-4 py-2 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+    <% else %>
+      <span class="px-4 py-2 rounded border border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600">← Anterior</span>
+    <% end %>
+
+    <% if next_page_url %>
+      <%= link_to "Siguiente →", next_page_url, class: "px-4 py-2 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" %>
+    <% else %>
+      <span class="px-4 py-2 rounded border border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600">Siguiente →</span>
+    <% end %>
+  </div>
+</div>
