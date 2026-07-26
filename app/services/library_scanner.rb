@@ -34,12 +34,12 @@ class LibraryScanner
     folders.each do |folder|
       series = upsert_series(folder)
 
-      cbz_files_in(folder).each do |cbz_path|
-        relative_path = cbz_path.relative_path_from(@root).to_s
+      comic_files_in(folder).each do |comic_path|
+        relative_path = comic_path.relative_path_from(@root).to_s
         seen_file_paths << relative_path
 
         begin
-          upsert_volume(series, cbz_path, relative_path)
+          upsert_volume(series, comic_path, relative_path)
         rescue StandardError => e
           Rails.logger.error("[LibraryScanner] #{relative_path}: #{e.message}")
           errors << "#{relative_path}: #{e.message}"
@@ -61,8 +61,8 @@ class LibraryScanner
     @root.children.select(&:directory?).sort_by { |path| path.basename.to_s }
   end
 
-  def cbz_files_in(folder)
-    folder.children.select { |path| path.file? && path.extname.downcase == ".cbz" }
+  def comic_files_in(folder)
+    folder.children.select { |path| path.file? && ComicArchive::SUPPORTED_EXTENSIONS.include?(path.extname.downcase) }
           .sort_by { |path| path.basename.to_s }
   end
 
@@ -75,17 +75,17 @@ class LibraryScanner
     series
   end
 
-  def upsert_volume(series, cbz_path, relative_path)
-    stat = cbz_path.stat
+  def upsert_volume(series, comic_path, relative_path)
+    stat = comic_path.stat
     volume = series.volumes.find_or_initialize_by(file_path: relative_path)
 
-    # No reabrir/reprocesar un .cbz de ~200MB si no cambió desde el último escaneo.
+    # No reabrir/reprocesar un archivo de ~200MB si no cambió desde el último escaneo.
     return if volume.persisted? &&
               volume.file_mtime == stat.mtime &&
               volume.file_size == stat.size
 
-    archive = CbzArchive.new(cbz_path.to_s)
-    name_without_extension = cbz_path.basename(".cbz").to_s
+    archive = ComicArchive.for(comic_path.to_s)
+    name_without_extension = comic_path.basename(comic_path.extname).to_s
 
     volume.assign_attributes(
       display_name: name_without_extension,

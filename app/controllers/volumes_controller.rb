@@ -16,9 +16,9 @@ class VolumesController < ApplicationController
     fresh_when(etag: [ @volume.file_path, @volume.file_mtime, number ], last_modified: @volume.file_mtime, public: true)
     return if performed?
 
-    page = CbzArchive.new(@volume.absolute_path).read_page(number)
+    page = ComicArchive.for(@volume.absolute_path).read_page(number)
     send_data page.data, type: page.content_type, disposition: "inline"
-  rescue CbzArchive::Error
+  rescue ComicArchiveError
     head :not_found
   end
 

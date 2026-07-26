@@ -1,6 +1,6 @@
 # Lee tu manga
 
-Lector de manga/cómics personal y self-hosted. Lee tomos `.cbz` desde una carpeta local.
+Lector de manga/cómics personal y self-hosted. Lee tomos `.cbz` y `.cbr` desde una carpeta local.
 
 ## Uso local
 
