@@ -27,7 +27,7 @@ jobs:
       # nativos (ubuntu-24.04-arm), cambiar runs-on arriba evita esta
       # emulación y hace el build bastante más rápido.
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
 
