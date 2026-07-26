@@ -1,4 +1,6 @@
 class LibraryScanner
+  class Error < StandardError; end
+
   # Vol/Tomo/# seguido de un número (con decimal opcional para extras "1.5").
   # Se prueba en orden: "Tomo 01 (#001-007)" matchea en "Tomo", no en "#001".
   VOLUME_NUMBER_PATTERN = /(?:tomo|vol(?:ume|umen)?|v|\#)\.?\s*(\d+(?:\.\d+)?)/i
@@ -14,10 +16,22 @@ class LibraryScanner
   end
 
   def scan
+    folders = series_folders
+
+    # Si no aparece ninguna carpeta de serie pero ya había series cargadas,
+    # lo más probable es que la biblioteca no esté montada (p.ej. un disco
+    # externo desconectado) y no que el usuario haya borrado todo. No
+    # seguimos: mejor un escaneo fallido y visible que borrar por error todo
+    # el progreso de lectura.
+    if folders.empty? && Series.exists?
+      raise Error, "No se encontró ninguna serie en '#{@root}' pero ya había series en la base de datos. " \
+                   "¿Está montada/disponible la carpeta de la biblioteca? No se modificó nada."
+    end
+
     errors = []
     seen_file_paths = []
 
-    series_folders.each do |folder|
+    folders.each do |folder|
       series = upsert_series(folder)
 
       cbz_files_in(folder).each do |cbz_path|
