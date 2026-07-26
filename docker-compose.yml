@@ -8,9 +8,13 @@ services:
       - "127.0.0.1:${APP_PORT:-3050}:80"
     environment:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      MANGA_LIBRARY_PATH: /library
+      MANGA_LIBRARY_PATH: /mangas
       OWNER_USERNAME: ${OWNER_USERNAME}
       OWNER_PASSWORD: ${OWNER_PASSWORD}
+      # Sin esto, Puma nunca corre el supervisor de Solid Queue y los jobs
+      # (escaneo de biblioteca, tareas recurrentes) quedan encolados para
+      # siempre sin ejecutarse nunca.
+      SOLID_QUEUE_IN_PUMA: "1"
     volumes:
-      - ./mangas:/library:ro
+      - ./mangas:/mangas:ro
       - ./storage:/rails/storage
