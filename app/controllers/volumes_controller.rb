@@ -7,8 +7,10 @@ class VolumesController < ApplicationController
     @page_number = params[:page].to_i.clamp(0, [ @volume.page_count - 1, 0 ].max)
     @mode = resolve_mode
 
+    # El progreso solo se guarda para el dueño logueado; una visita sin sesión
+    # puede leer normal pero no pisa el progreso compartido.
     # En modo cascada el progreso se actualiza vía JS mientras se hace scroll (ver #progress).
-    @volume.progress.update_progress!(page: @page_number, total_pages: @volume.page_count) if @mode == "paged"
+    @volume.progress.update_progress!(page: @page_number, total_pages: @volume.page_count) if @mode == "paged" && owner_signed_in?
   end
 
   def page
@@ -24,7 +26,7 @@ class VolumesController < ApplicationController
 
   def progress
     page = params[:page].to_i.clamp(0, [ @volume.page_count - 1, 0 ].max)
-    @volume.progress.update_progress!(page: page, total_pages: @volume.page_count)
+    @volume.progress.update_progress!(page: page, total_pages: @volume.page_count) if owner_signed_in?
     head :no_content
   end
 

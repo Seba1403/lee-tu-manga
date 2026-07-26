@@ -11,9 +11,6 @@ services:
       MANGA_LIBRARY_PATH: /mangas
       OWNER_USERNAME: ${OWNER_USERNAME}
       OWNER_PASSWORD: ${OWNER_PASSWORD}
-      # Sin esto, Puma nunca corre el supervisor de Solid Queue y los jobs
-      # (escaneo de biblioteca, tareas recurrentes) quedan encolados para
-      # siempre sin ejecutarse nunca.
       SOLID_QUEUE_IN_PUMA: "1"
     volumes:
       - ./mangas:/mangas:ro

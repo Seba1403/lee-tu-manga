@@ -6,19 +6,22 @@
 
 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
   <% @volumes.each do |volume| %>
-    <%= link_to volume_path(volume, page: volume.progress.current_page), class: "group" do %>
+    <% start_page = owner_signed_in? ? volume.progress.current_page : 0 %>
+    <%= link_to volume_path(volume, page: start_page), class: "group" do %>
       <div class="relative aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
         <% if volume.cover.attached? %>
           <%= image_tag volume.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
         <% end %>
 
-        <% progress = volume.progress %>
-        <% if progress.in_progress? %>
-          <div class="absolute bottom-0 inset-x-0 h-1 bg-black/30">
-            <div class="h-full bg-blue-500" style="width: <%= (100.0 * progress.current_page / [ volume.page_count - 1, 1 ].max).round %>%"></div>
-          </div>
-        <% elsif progress.completed? %>
-          <div class="absolute top-1 right-1 bg-blue-600 text-white text-[10px] leading-none rounded-full px-1.5 py-1">✓</div>
+        <% if owner_signed_in? %>
+          <% progress = volume.progress %>
+          <% if progress.in_progress? %>
+            <div class="absolute bottom-0 inset-x-0 h-1 bg-black/30">
+              <div class="h-full bg-blue-500" style="width: <%= (100.0 * progress.current_page / [ volume.page_count - 1, 1 ].max).round %>%"></div>
+            </div>
+          <% elsif progress.completed? %>
+            <div class="absolute top-1 right-1 bg-blue-600 text-white text-[10px] leading-none rounded-full px-1.5 py-1">✓</div>
+          <% end %>
         <% end %>
       </div>
       <p class="mt-1 text-sm font-medium truncate"><%= volume.display_name %></p>
