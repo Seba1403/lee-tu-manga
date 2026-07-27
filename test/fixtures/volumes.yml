@@ -1,21 +1,31 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  series: one
-  position: 9.99
-  display_name: MyString
-  file_path: MyString
-  file_size: 1
-  file_mtime: 2026-07-26 15:32:59
-  page_count: 1
-  cover_page_index: 1
+magi_01:
+  series: magi
+  position: 1.0
+  display_name: Magi 01
+  file_path: Magi/Magi 01.cbz
+  file_size: 104857600
+  file_mtime: 2026-07-01 10:00:00
+  page_count: 190
+  cover_page_index: 0
 
-two:
-  series: two
-  position: 9.99
-  display_name: MyString
-  file_path: MyString
-  file_size: 1
-  file_mtime: 2026-07-26 15:32:59
-  page_count: 1
-  cover_page_index: 1
+magi_02:
+  series: magi
+  position: 2.0
+  display_name: Magi 02
+  file_path: Magi/Magi 02.cbz
+  file_size: 110100480
+  file_mtime: 2026-07-02 10:00:00
+  page_count: 180
+  cover_page_index: 0
+
+tokyo_ghoul_01:
+  series: tokyo_ghoul
+  position: 1.0
+  display_name: Tokyo Ghoul 01
+  file_path: Tokyo Ghoul/Tokyo Ghoul 01.cbz
+  file_size: 98765432
+  file_mtime: 2026-07-03 10:00:00
+  page_count: 200
+  cover_page_index: 0

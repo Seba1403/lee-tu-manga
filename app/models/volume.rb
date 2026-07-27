@@ -1,7 +1,7 @@
 class Volume < ApplicationRecord
   belongs_to :series
   has_one :reading_progress, dependent: :destroy
-  has_one_attached :cover
+  has_one_attached :cover, dependent: :purge_later
 
   validates :display_name, presence: true
   validates :file_path, presence: true, uniqueness: true

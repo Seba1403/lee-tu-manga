@@ -1,13 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  volume: one
-  current_page: 1
-  status: 1
-  last_read_at: 2026-07-26 15:33:02
+magi_01_progress:
+  volume: magi_01
+  current_page: 95
+  status: 1 # in_progress
+  last_read_at: 2026-07-20 21:15:00
 
-two:
-  volume: two
-  current_page: 1
-  status: 1
-  last_read_at: 2026-07-26 15:33:02
+tokyo_ghoul_01_progress:
+  volume: tokyo_ghoul_01
+  current_page: 199
+  status: 2 # completed
+  last_read_at: 2026-07-15 08:30:00

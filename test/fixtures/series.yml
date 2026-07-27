@@ -1,11 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  title: MyString
-  slug: MyString
-  folder_path: MyString
+magi:
+  title: Magi
+  slug: magi
+  folder_path: Magi
 
-two:
-  title: MyString
-  slug: MyString
-  folder_path: MyString
+tokyo_ghoul:
+  title: Tokyo Ghoul
+  slug: tokyo-ghoul
+  folder_path: Tokyo Ghoul

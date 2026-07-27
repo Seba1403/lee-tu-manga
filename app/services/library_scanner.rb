@@ -80,9 +80,17 @@ class LibraryScanner
     volume = series.volumes.find_or_initialize_by(file_path: relative_path)
 
     # No reabrir/reprocesar un archivo de ~200MB si no cambió desde el último escaneo.
+    # Si un escaneo anterior guardó el volumen pero falló antes de generar la
+    # portada (p.ej. error puntual de unrar), cover.attached? es false y se
+    # reintenta igual, en vez de quedar sin portada para siempre.
+    # Comparar solo al segundo: SQLite trunca el datetime guardado a
+    # microsegundos, mientras que File#stat trae nanosegundos, así que
+    # file_mtime == stat.mtime casi nunca da true después de un round-trip
+    # aunque el archivo no haya cambiado (y esta guarda dejaría de servir).
     return if volume.persisted? &&
-              volume.file_mtime == stat.mtime &&
-              volume.file_size == stat.size
+              volume.file_mtime.to_i == stat.mtime.to_i &&
+              volume.file_size == stat.size &&
+              volume.cover.attached?
 
     archive = ComicArchive.for(comic_path.to_s)
     name_without_extension = comic_path.basename(comic_path.extname).to_s

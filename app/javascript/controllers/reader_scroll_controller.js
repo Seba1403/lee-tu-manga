@@ -8,7 +8,13 @@ export default class extends Controller {
   static values = { initialPage: Number, progressUrl: String }
 
   connect() {
-    this.pageTargets[this.initialPageValue]?.scrollIntoView()
+    // Turbo restablece el scroll a 0 al completar una visita (link normal o
+    // submit), y lo hace después de que este controller ya se conectó, así
+    // que un scrollIntoView() síncrono acá queda pisado. Se difiere a después
+    // del siguiente repintado, cuando la restauración de Turbo ya ocurrió.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this.pageTargets[this.initialPageValue]?.scrollIntoView())
+    })
 
     this.observer = new IntersectionObserver(this.handleIntersect.bind(this), { threshold: 0.5 })
     this.pageTargets.forEach((page) => this.observer.observe(page))

@@ -3,8 +3,16 @@
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 text-sm">
   <%= link_to "← #{@volume.series.title}", series_path(@volume.series), class: "text-gray-500 dark:text-gray-400 hover:underline" %>
 
-  <div class="flex items-center gap-3">
+  <div class="flex flex-wrap items-center gap-3">
     <span class="text-gray-500 dark:text-gray-400"><%= @volume.display_name %> — página <%= @page_number + 1 %> / <%= @volume.page_count %></span>
+
+    <%= form_with url: volume_path(@volume), method: :get, class: "flex items-center gap-1" do |form| %>
+      <%= form.hidden_field :mode, value: @mode %>
+      <%= form.number_field :goto, value: @page_number + 1, min: 1, max: @volume.page_count,
+            class: "w-14 text-center rounded border border-gray-300 dark:border-gray-700 bg-transparent px-1 py-1 text-sm",
+            "aria-label": "Ir a la página" %>
+      <%= form.submit "Ir", class: "text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer" %>
+    <% end %>
 
     <div class="flex text-xs rounded border border-gray-300 dark:border-gray-700 overflow-hidden shrink-0">
       <%= link_to "Página", volume_path(@volume, page: @page_number, mode: "paged"),

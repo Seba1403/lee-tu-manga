@@ -1,9 +1,8 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+#
+# password_digest se genera con BCrypt real (vía ERB) para que User#authenticate
+# funcione en los tests igual que en producción; la clave en claro es "password123".
 
-one:
-  username: MyString
-  password_digest: MyString
-
-two:
-  username: MyString
-  password_digest: MyString
+owner:
+  username: seba
+  password_digest: <%= BCrypt::Password.create("password123") %>

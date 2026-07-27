@@ -4,7 +4,7 @@ class VolumesController < ApplicationController
   before_action :set_volume
 
   def show
-    @page_number = params[:page].to_i.clamp(0, [ @volume.page_count - 1, 0 ].max)
+    @page_number = resolve_page_number
     @mode = resolve_mode
 
     # El progreso solo se guarda para el dueño logueado; una visita sin sesión
@@ -34,6 +34,14 @@ class VolumesController < ApplicationController
 
   def set_volume
     @volume = Volume.includes(:series).find(params[:id])
+  end
+
+  # "goto" es el número de página humano (1-indexado, el que se ve en pantalla)
+  # que manda el formulario de "ir a la página"; "page" sigue siendo el
+  # parámetro interno 0-indexado que ya usan todos los links existentes.
+  def resolve_page_number
+    page = params[:goto].present? ? params[:goto].to_i - 1 : params[:page].to_i
+    page.clamp(0, [ @volume.page_count - 1, 0 ].max)
   end
 
   def resolve_mode
