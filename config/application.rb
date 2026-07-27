@@ -28,6 +28,13 @@ module LeeTuManga
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Servir los archivos de Active Storage (portadas) en un solo request en
+    # vez del redirect de dos saltos por default. Con el servicio local esto
+    # no cambia qué controller sirve los bytes, solo evita un round-trip
+    # extra por imagen — que se nota mucho al entrar por internet (Cloudflare
+    # Tunnel) y casi nada en LAN, que es justo el síntoma reportado.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

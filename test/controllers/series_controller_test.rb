@@ -36,6 +36,26 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_match "bg-blue-500", response.body
   end
 
+  test "volume covers are served resized, not at full original size" do
+    volume = volumes(:magi_01)
+    volume.cover.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/sample_cover.jpg")),
+      filename: "cover.jpg", content_type: "image/jpeg"
+    )
+    original_size = volume.cover.blob.byte_size
+
+    get series_path(series(:magi))
+    assert_response :success
+
+    variant_path = response.body[%r{(/rails/active_storage/representations/proxy/[^"]*)}, 1]
+    assert variant_path, "no se encontró una URL de variante de portada en la página"
+
+    get variant_path
+    assert_response :success
+    assert_operator response.body.bytesize, :<, original_size,
+      "la portada debería servirse redimensionada (más chica que el original), no en tamaño completo"
+  end
+
   private
 
   def sign_in_owner

@@ -10,7 +10,8 @@
     <%= link_to volume_path(volume, page: start_page), class: "group" do %>
       <div class="relative aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
         <% if volume.cover.attached? %>
-          <%= image_tag volume.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
+          <%= image_tag volume.cover.variant(resize_to_limit: [ 360, 540 ]), loading: "lazy",
+                class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
         <% end %>
 
         <% if owner_signed_in? %>

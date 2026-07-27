@@ -8,7 +8,8 @@
         <%= link_to volume_path(volume, page: volume.reading_progress.current_page), class: "group" do %>
           <div class="aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
             <% if volume.cover.attached? %>
-              <%= image_tag volume.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
+              <%= image_tag volume.cover.variant(resize_to_limit: [ 360, 540 ]), loading: "lazy",
+                    class: "w-full h-full object-cover group-hover:opacity-80", alt: volume.display_name %>
             <% end %>
           </div>
           <p class="mt-1 text-sm font-medium truncate"><%= volume.series.title %></p>
@@ -32,7 +33,8 @@
         <%= link_to series_path(series), class: "group" do %>
           <div class="aspect-[2/3] rounded overflow-hidden bg-gray-200 dark:bg-gray-800">
             <% if series.cover&.attached? %>
-              <%= image_tag series.cover, class: "w-full h-full object-cover group-hover:opacity-80", alt: series.title %>
+              <%= image_tag series.cover.variant(resize_to_limit: [ 360, 540 ]), loading: "lazy",
+                    class: "w-full h-full object-cover group-hover:opacity-80", alt: series.title %>
             <% end %>
           </div>
           <p class="mt-1 text-sm font-medium truncate"><%= series.title %></p>
