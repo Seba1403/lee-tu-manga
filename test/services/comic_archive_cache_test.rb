@@ -1,11 +1,10 @@
 require "test_helper"
 require "tmpdir"
 
-# El entorno de test usa :null_store (ver config/environments/test.rb), que
-# nunca memoiza nada, así que estos tests fuerzan un cache_store real para
-# poder verificar que list_entry_names/extract_page no se vuelven a invocar
-# en un cache hit (que es justo lo que evita reabrir el zip / relanzar unrar
-# en cada página).
+# El entorno de test usa :null_store (ver config/environments/test.rb), que no
+# guarda nada, así que estos tests instalan un cache real para poder verificar
+# que el listado de páginas del tomo se calcula una sola vez y no en cada
+# página pedida (que es lo que evitaba el doble unrar en .cbr).
 class ComicArchiveCacheTest < ActiveSupport::TestCase
   class FakeArchive
     include ComicArchiveCache
@@ -31,52 +30,56 @@ class ComicArchiveCacheTest < ActiveSupport::TestCase
     end
   end
 
-  test "reuses the cached entry list and page bytes across instances of the same file" do
+  test "reuses the cached page list across instances of the same file" do
     with_real_cache do
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "volume.cbz")
-        File.write(path, "irrelevant")
-
+      with_archive_file do |path|
         first = FakeArchive.new(path)
         assert_equal 2, first.page_count
         page = first.read_page(0)
         assert_equal "bytes-for-001.jpg", page.data
         assert_equal "image/jpeg", page.content_type
         assert_equal 1, first.list_calls
-        assert_equal 1, first.extract_calls
-
-        second = FakeArchive.new(path)
-        repeated = second.read_page(0)
-
-        assert_equal "bytes-for-001.jpg", repeated.data
-        assert_equal 0, second.list_calls
-        assert_equal 0, second.extract_calls
-      end
-    end
-  end
-
-  test "still extracts an uncached page even when the entry list is already cached" do
-    with_real_cache do
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "volume.cbz")
-        File.write(path, "irrelevant")
-
-        FakeArchive.new(path).read_page(0)
 
         second = FakeArchive.new(path)
         second.read_page(1)
 
         assert_equal 0, second.list_calls
+      end
+    end
+  end
+
+  test "lists the pages only once even when reading several pages" do
+    with_real_cache do
+      with_archive_file do |path|
+        archive = FakeArchive.new(path)
+        archive.read_page(0)
+        archive.read_page(1)
+        archive.read_page(0)
+
+        assert_equal 1, archive.list_calls
+      end
+    end
+  end
+
+  # Los bytes se extraen siempre: cachearlos salía más caro que extraerlos
+  # (ver el comentario en ComicArchiveCache), y releer una página la resuelve
+  # la caché del navegador sin llegar al servidor.
+  test "extracts the page bytes on every read" do
+    with_real_cache do
+      with_archive_file do |path|
+        FakeArchive.new(path).read_page(0)
+
+        second = FakeArchive.new(path)
+        second.read_page(0)
+
         assert_equal 1, second.extract_calls
       end
     end
   end
 
-  test "busts the cache when the file's mtime changes" do
+  test "recalculates the page list when the file's mtime changes" do
     with_real_cache do
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "volume.cbz")
-        File.write(path, "irrelevant")
+      with_archive_file do |path|
         FakeArchive.new(path).read_page(0)
 
         File.utime(Time.now, Time.now + 5, path)
@@ -85,12 +88,33 @@ class ComicArchiveCacheTest < ActiveSupport::TestCase
         second.read_page(0)
 
         assert_equal 1, second.list_calls
-        assert_equal 1, second.extract_calls
+      end
+    end
+  end
+
+  test "raises ComicArchiveError when the file is gone" do
+    with_real_cache do
+      assert_raises(ComicArchiveError) { FakeArchive.new("/nonexistent.cbz").read_page(0) }
+    end
+  end
+
+  test "raises ComicArchiveError for an out-of-range page" do
+    with_real_cache do
+      with_archive_file do |path|
+        assert_raises(ComicArchiveError) { FakeArchive.new(path).read_page(99) }
       end
     end
   end
 
   private
+
+  def with_archive_file
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "volume.cbz")
+      File.write(path, "el contenido no importa: FakeArchive no lo abre")
+      yield path
+    end
+  end
 
   def with_real_cache
     original = Rails.cache

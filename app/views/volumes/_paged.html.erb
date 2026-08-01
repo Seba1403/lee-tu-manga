@@ -1,4 +1,7 @@
 <%
+  # Se resuelve una sola vez: next_volume consulta los tomos de la serie.
+  next_volume = @page_number >= @volume.page_count - 1 ? @volume.next_volume : nil
+
   previous_page_url = if @page_number > 0
     volume_path(@volume, page: @page_number - 1, mode: "paged")
   elsif @volume.previous_volume
@@ -7,14 +10,26 @@
 
   next_page_url = if @page_number < @volume.page_count - 1
     volume_path(@volume, page: @page_number + 1, mode: "paged")
-  elsif @volume.next_volume
-    volume_path(@volume.next_volume, page: 0, mode: "paged")
+  elsif next_volume
+    volume_path(next_volume, page: 0, mode: "paged")
   end
+
+  # Imágenes que el navegador descarga mientras se lee la página actual, para
+  # que al pasar de hoja ya estén listas y no haya que esperarlas (el trabajo
+  # lo hace reader_controller.js). Se precargan las dos siguientes y la
+  # anterior, que cubren tanto avanzar como volver atrás.
+  preload_urls = (1..2).filter_map do |offset|
+    following = @page_number + offset
+    page_volume_path(@volume, number: following) if following < @volume.page_count
+  end
+  preload_urls << page_volume_path(@volume, number: @page_number - 1) if @page_number > 0
+  preload_urls << page_volume_path(next_volume, number: 0) if next_volume
 %>
 
 <div data-controller="reader"
      data-reader-previous-url-value="<%= previous_page_url %>"
      data-reader-next-url-value="<%= next_page_url %>"
+     data-reader-preload-urls-value="<%= preload_urls.to_json %>"
      class="flex flex-col items-center gap-4">
 
   <div class="relative flex justify-center items-center w-full min-h-[70vh]">

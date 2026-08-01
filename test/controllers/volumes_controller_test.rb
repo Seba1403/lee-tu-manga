@@ -13,6 +13,41 @@ class VolumesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "pages are cacheable by the browser so the preloaded ones are reused" do
+    with_library_root do |root|
+      write_cbz(File.join(root, volumes(:magi_01).file_path))
+
+      get page_volume_path(volumes(:magi_01), number: 0)
+
+      assert_response :success
+      assert_includes response.headers["Cache-Control"], "max-age"
+      assert_includes response.headers["Cache-Control"], "public"
+      assert response.headers["ETag"].present?
+    end
+  end
+
+  test "the reader preloads the neighbouring pages of the current one" do
+    volume = volumes(:magi_02)
+
+    get volume_path(volume, page: 5, mode: "paged")
+
+    assert_response :success
+    preloaded = JSON.parse(css_select("[data-reader-preload-urls-value]").first["data-reader-preload-urls-value"])
+    assert_includes preloaded, page_volume_path(volume, number: 6)
+    assert_includes preloaded, page_volume_path(volume, number: 7)
+    assert_includes preloaded, page_volume_path(volume, number: 4)
+  end
+
+  test "the last page preloads the first one of the next volume" do
+    volume = volumes(:magi_01)
+
+    get volume_path(volume, page: volume.page_count - 1, mode: "paged")
+
+    assert_response :success
+    preloaded = JSON.parse(css_select("[data-reader-preload-urls-value]").first["data-reader-preload-urls-value"])
+    assert_includes preloaded, page_volume_path(volume.next_volume, number: 0)
+  end
+
   test "returns 404 for a page index that does not exist" do
     with_library_root do |root|
       write_cbz(File.join(root, volumes(:magi_01).file_path))

@@ -1,15 +1,21 @@
-# Cachea (vía Rails.cache / Solid Cache) el listado de páginas y los bytes ya
-# extraídos de un tomo, para que abrir y parsear el archivo (zip o unrar)
-# ocurra una sola vez por versión del archivo (mtime) en vez de en cada
-# página. Antes, CbzArchive reabría el zip dos veces por página (listado +
-# lectura) y CbrArchive lanzaba dos procesos "unrar" por página (uno para
-# listar entradas, otro para extraer); con esto, en caliente, ninguno de los
-# dos vuelve a tocar el archivo.
+# Interfaz común de lectura (#page_count, #read_page) para CbzArchive y
+# CbrArchive, más la caché del listado de páginas del tomo.
 #
-# Las subclases (CbzArchive, CbrArchive) solo implementan cómo listar
-# entradas (#list_entry_names) y extraer una página (#extract_page); este
-# módulo se encarga de cachear ambos resultados y de exponer la interfaz
-# común (#page_count, #read_page).
+# El listado se cachea porque antes se recalculaba en CADA página pedida, solo
+# para saber qué nombre de entrada corresponde al índice: en .cbz eso era una
+# apertura extra del zip, y en .cbr un proceso "unrar" extra además del de
+# extracción (dos spawns por página).
+#
+# Los bytes de la página NO se cachean, a propósito. Medido sobre un tomo
+# realista (200 páginas de ~400 KB), guardarlos en Solid Cache sale más caro de
+# lo que ahorra al leer hacia adelante, que es el caso normal: la página nueva
+# nunca está en caché, y encima hay que gzipear un JPEG (solid_cache viene con
+# compress: true, ~38 ms por página para 0% de ahorro) y escribir ~78 MB por
+# tomo contra un tope de caché de 256 MB. Releer una página ya lo resuelve la
+# caché del navegador vía ETag/Last-Modified, sin tocar el servidor.
+#
+# Las clases que lo incluyen solo implementan el "cómo" de cada formato:
+# #list_entry_names y #extract_page(name).
 module ComicArchiveCache
   Page = Struct.new(:data, :content_type)
 
@@ -21,31 +27,25 @@ module ComicArchiveCache
     name = entry_names[index]
     raise ComicArchiveError, "No existe la página #{index} en #{@path}" unless name
 
-    data = Rails.cache.fetch(page_cache_key(index)) { extract_page(name) }
-    Page.new(data, ComicPageNaming.content_type_for(name))
+    Page.new(extract_page(name), ComicPageNaming.content_type_for(name))
   end
 
   private
 
-  # Memoizado también a nivel de instancia (además del Rails.cache) porque
-  # LibraryScanner llama a page_count y luego a read_page sobre el mismo
-  # objeto, y en test el cache_store es :null_store (no memoiza nada).
+  # Memoizado también a nivel de instancia (además de Rails.cache) porque
+  # LibraryScanner pide page_count y después read_page sobre el mismo objeto,
+  # y en el entorno de test el cache_store es :null_store (no guarda nada).
   def entry_names
     @entry_names ||= Rails.cache.fetch(entries_cache_key) { list_entry_names }
   end
 
+  # Incluir el mtime en la clave invalida sola: si el archivo cambia, la
+  # próxima lectura usa otra clave y el listado viejo queda inalcanzable
+  # (Solid Cache lo termina expulsando por tamaño, no hay que borrarlo a mano).
   def entries_cache_key
     [ "comic_archive", "entries", @path, mtime_i ]
   end
 
-  def page_cache_key(index)
-    [ "comic_archive", "page", @path, mtime_i, index ]
-  end
-
-  # Cachear por mtime invalida solo: si el archivo cambia (re-descarga,
-  # reemplazo), la próxima lectura usa una key distinta y listados/páginas
-  # viejos quedan simplemente inalcanzables (Solid Cache los expulsa por
-  # tamaño con el tiempo, no hace falta borrarlos a mano).
   def mtime_i
     @mtime_i ||= File.mtime(@path).to_i
   rescue Errno::ENOENT

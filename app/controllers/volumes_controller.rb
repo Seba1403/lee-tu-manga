@@ -15,6 +15,12 @@ class VolumesController < ApplicationController
 
   def page
     number = params[:number].to_i
+    # Sin un max-age explícito el navegador decide por heurística si puede
+    # reutilizar lo que ya bajó, y ahí se pierde la precarga: volvería a pedir
+    # la página (aunque sea un 304) justo al pasar de hoja. Una hora alcanza de
+    # sobra para una sesión de lectura; si el archivo se reemplaza, el ETag
+    # incluye el mtime y la próxima revalidación lo detecta igual.
+    expires_in 1.hour, public: true
     fresh_when(etag: [ @volume.file_path, @volume.file_mtime, number ], last_modified: @volume.file_mtime, public: true)
     return if performed?
 
