@@ -25,17 +25,18 @@
   preload_urls << page_volume_path(@volume, number: @page_number - 1) if @page_number > 0
   preload_urls << page_volume_path(next_volume, number: 0) if next_volume
 
-  # En pantalla completa los controles quedan sobre el fondo negro, así que los
-  # grises pensados para la página normal no se leen y hay que invertirlos.
-  button_classes = "px-4 py-2 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 " \
-    "group-data-fullscreen:border-white/30 group-data-fullscreen:text-white group-data-fullscreen:hover:bg-white/10"
+  # Zonas transparentes que ocupan un tercio a cada lado para pasar de página.
+  # El tercio del medio queda libre a propósito: ahí el doble clic hace zoom
+  # sin pelearse con el clic que cambia de hoja.
+  side_zone_classes = "absolute inset-y-0 w-1/3 group-data-zoomed:cursor-grab"
 
-  disabled_button_classes = "px-4 py-2 rounded border border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600 " \
-    "group-data-fullscreen:border-white/10 group-data-fullscreen:text-white/40"
+  button_classes = "px-4 py-2 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+  disabled_button_classes = "px-4 py-2 rounded border border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600"
 %>
 
-<%# El atributo data-fullscreen lo pone y lo saca reader_controller.js; de él
-    cuelgan todas las variantes group-data-fullscreen:* de este partial. %>
+<%# Los atributos data-fullscreen y data-zoomed los pone y los saca
+    reader_controller.js; de ellos cuelgan las variantes group-data-* de este
+    partial. %>
 <div data-controller="reader"
      data-reader-previous-url-value="<%= previous_page_url %>"
      data-reader-next-url-value="<%= next_page_url %>"
@@ -44,34 +45,36 @@
             data-fullscreen:fixed data-fullscreen:inset-0 data-fullscreen:z-50
             data-fullscreen:gap-0 data-fullscreen:bg-black">
 
-  <div class="relative flex w-full items-center justify-center min-h-[80dvh]
-              group-data-fullscreen:h-dvh group-data-fullscreen:min-h-0">
+  <%# overflow-hidden recorta la página ampliada al escenario; sin esto el
+      zoom se derrama sobre el resto de la pantalla. %>
+  <div data-reader-target="stage"
+       data-action="pointerdown->reader#startGesture dblclick->reader#toggleZoom"
+       class="relative flex w-full items-center justify-center overflow-hidden min-h-[80dvh]
+              group-data-zoomed:touch-none
+              group-data-fullscreen:h-dvh group-data-fullscreen:min-h-0 group-data-fullscreen:touch-none">
     <% if previous_page_url %>
-      <%= link_to previous_page_url, class: "absolute inset-y-0 left-0 w-1/3", "aria-label": "Página anterior" do %><% end %>
+      <%= link_to previous_page_url, class: "#{side_zone_classes} left-0", draggable: false, "aria-label": "Página anterior" do %><% end %>
     <% end %>
 
     <%# h-[80dvh] en vez de max-h-: con max- una página de origen chica se
         quedaba en su tamaño nativo; así siempre ocupa el alto disponible, y
         object-contain evita que se deforme cuando max-w-full la limita. %>
     <%= image_tag page_volume_path(@volume, number: @page_number),
-          class: "h-[80dvh] w-auto max-w-full object-contain rounded shadow-lg select-none
+          class: "h-[80dvh] w-auto max-w-full object-contain origin-center rounded shadow-lg select-none
                   group-data-fullscreen:h-dvh group-data-fullscreen:w-full
                   group-data-fullscreen:rounded-none group-data-fullscreen:shadow-none",
           alt: "Página #{@page_number + 1}",
+          draggable: false,
           data: { reader_target: "image" } %>
 
     <% if next_page_url %>
-      <%= link_to next_page_url, class: "absolute inset-y-0 right-0 w-1/3", "aria-label": "Página siguiente" do %><% end %>
+      <%= link_to next_page_url, class: "#{side_zone_classes} right-0", draggable: false, "aria-label": "Página siguiente" do %><% end %>
     <% end %>
   </div>
 
-  <%# En pantalla completa la fila deja el flujo y flota sobre la imagen, por
-      encima de las zonas laterales que cambian de página. %>
-  <div class="flex items-center gap-4
-              group-data-fullscreen:absolute group-data-fullscreen:bottom-4
-              group-data-fullscreen:left-1/2 group-data-fullscreen:-translate-x-1/2
-              group-data-fullscreen:z-10 group-data-fullscreen:rounded-full
-              group-data-fullscreen:bg-black/60 group-data-fullscreen:px-3 group-data-fullscreen:py-2">
+  <%# En pantalla completa la barra desaparece del todo: tapaba la lectura y
+      las dos acciones que ofrecía ya están en los costados y en Escape. %>
+  <div class="flex items-center gap-4 group-data-fullscreen:hidden">
     <% if previous_page_url %>
       <%= link_to "← Anterior", previous_page_url, class: button_classes %>
     <% else %>
@@ -82,18 +85,13 @@
             data-action="reader#toggleFullscreen"
             data-reader-target="toggle"
             aria-pressed="false"
-            title="Pantalla completa (F)"
+            title="Pantalla completa (F) — Escape para salir, doble clic o rueda para acercar"
             class="<%= button_classes %> flex items-center gap-2">
-      <svg class="size-4 group-data-fullscreen:hidden" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
       </svg>
-      <svg class="size-4 hidden group-data-fullscreen:block" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-      </svg>
-      <span class="group-data-fullscreen:hidden">Pantalla completa</span>
-      <span class="hidden group-data-fullscreen:inline">Salir</span>
+      Pantalla completa
     </button>
 
     <% if next_page_url %>
